@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
+import pasajerosRoutes from "./routes/pasajeros.routes.js";
 
 const app = express();
 
@@ -11,6 +12,8 @@ app.use(express.json());
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "API del sistema de vuelos funcionando" });
 });
+
+app.use("/api/pasajeros", pasajerosRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
