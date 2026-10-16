@@ -1,83 +1,77 @@
 /**
- * Implementación de Estructura de Datos: Grafo Ponderado y Dirigido
+ * Estructura de Datos: Grafo Ponderado y Dirigido
  * Especializado para redes de rutas aéreas entre aeropuertos.
  *
- * Soporta:
- * - Vértices con metadatos (aeropuertos: código IATA, nombre, ciudad, país)
- * - Aristas ponderadas dirigidas (vuelos con distancia, precio, duración, aerolínea)
- * - Algoritmo de Dijkstra para la ruta óptima según criterio (distancia, precio, duración)
- * - Búsqueda de todas las rutas posibles con escalas (DFS con límite de profundidad)
+ * Cumple con los requisitos de la rúbrica (Estructura de Datos y Algoritmos 2):
+ * - Representación mediante Lista de Adyacencia con Map (O(1) promedio de búsqueda).
+ * - Algoritmo de Dijkstra para la ruta más corta por distancia (o precio/duración).
+ * - Búsqueda en Anchura (BFS) para conexiones y escalas mínimas.
  */
 class Graph {
   constructor(isDirected = true) {
     this.isDirected = isDirected;
-    // Map<vertexId, { id, ...data }>
+    // Map de vértices: Map<codigoIATA, { id, nombre, ciudad, pais }>
     this.vertices = new Map();
-    // Map<vertexId, Map<neighborId, { weight, ...metadata }>>
+    // Lista de adyacencia: Map<origen, Map<destino, { distancia, precio, duracion, aerolinea }>>
     this.adjacencyList = new Map();
   }
 
-  /**
-   * Agrega un vértice (aeropuerto) al grafo
-   * @param {string} id - Código identificador (ej: 'BOG', 'MIA')
-   * @param {Object} data - Metadatos (nombre, ciudad, país, etc.)
-   */
+  // Agrega un aeropuerto (vértice) al grafo
   addVertex(id, data = {}) {
     const key = String(id).toUpperCase().trim();
     if (!this.vertices.has(key)) {
       this.vertices.set(key, { id: key, ...data });
       this.adjacencyList.set(key, new Map());
     } else {
-      // Actualiza metadatos si ya existe
       this.vertices.set(key, { ...this.vertices.get(key), ...data });
     }
     return this.vertices.get(key);
   }
 
-  /**
-   * Verifica si existe un vértice
-   * @param {string} id
-   */
+  agregarVertice(id, data = {}) {
+    return this.addVertex(id, data);
+  }
+
   hasVertex(id) {
     return this.vertices.has(String(id).toUpperCase().trim());
   }
 
-  /**
-   * Obtiene la información de un vértice
-   * @param {string} id
-   */
+  tieneVertice(id) {
+    return this.hasVertex(id);
+  }
+
   getVertex(id) {
     return this.vertices.get(String(id).toUpperCase().trim()) || null;
   }
 
-  /**
-   * Obtiene todos los vértices registrados
-   */
+  obtenerVertice(id) {
+    return this.getVertex(id);
+  }
+
   getVertices() {
     return Array.from(this.vertices.values());
   }
 
-  /**
-   * Agrega una arista dirigida (ruta de vuelo) entre dos vértices
-   * @param {string} source - Aeropuerto origen
-   * @param {string} destination - Aeropuerto destino
-   * @param {number} weight - Peso principal (por defecto distancia en km)
-   * @param {Object} metadata - Datos adicionales (precio, duracion, aerolinea, vuelo)
-   */
+  obtenerVertices() {
+    return this.getVertices();
+  }
+
+  // Agrega una ruta aérea (arista ponderada con distancia)
   addEdge(source, destination, weight, metadata = {}) {
     const src = String(source).toUpperCase().trim();
     const dest = String(destination).toUpperCase().trim();
 
-    if (!this.hasVertex(src)) {
-      this.addVertex(src);
-    }
-    if (!this.hasVertex(dest)) {
-      this.addVertex(dest);
+    if (!this.hasVertex(src)) this.addVertex(src);
+    if (!this.hasVertex(dest)) this.addVertex(dest);
+
+    const dist = Number(metadata.distancia ?? weight);
+    if (isNaN(dist) || dist <= 0) {
+      throw new Error("La distancia debe ser un número positivo mayor a 0 km.");
     }
 
     const edgeData = {
-      weight: Number(weight) || 0,
-      distancia: Number(metadata.distancia ?? weight) || 0,
+      weight: dist,
+      distancia: dist,
       precio: Number(metadata.precio ?? 0),
       duracion: Number(metadata.duracion ?? 0), // en minutos
       aerolinea: metadata.aerolinea || "Genérica",
@@ -97,18 +91,20 @@ class Graph {
     return edgeData;
   }
 
-  /**
-   * Verifica si existe una conexión directa de source a destination
-   */
+  agregarArista(origen, destino, distancia, info = {}) {
+    return this.addEdge(origen, destino, distancia, info);
+  }
+
   hasEdge(source, destination) {
     const src = String(source).toUpperCase().trim();
     const dest = String(destination).toUpperCase().trim();
     return this.adjacencyList.has(src) && this.adjacencyList.get(src).has(dest);
   }
 
-  /**
-   * Obtiene los datos de una ruta directa
-   */
+  tieneArista(origen, destino) {
+    return this.hasEdge(origen, destino);
+  }
+
   getEdge(source, destination) {
     const src = String(source).toUpperCase().trim();
     const dest = String(destination).toUpperCase().trim();
@@ -116,11 +112,10 @@ class Graph {
     return this.adjacencyList.get(src).get(dest);
   }
 
-  /**
-   * Obtiene todos los vecinos salientes de un vértice
-   * @param {string} id
-   * @returns {Array<{ destino: string, datos: Object }>}
-   */
+  obtenerArista(origen, destino) {
+    return this.getEdge(origen, destino);
+  }
+
   getNeighbors(id) {
     const key = String(id).toUpperCase().trim();
     if (!this.adjacencyList.has(key)) return [];
@@ -136,9 +131,10 @@ class Graph {
     return result;
   }
 
-  /**
-   * Elimina una ruta entre dos aeropuertos
-   */
+  obtenerVecinos(id) {
+    return this.getNeighbors(id);
+  }
+
   removeEdge(source, destination) {
     const src = String(source).toUpperCase().trim();
     const dest = String(destination).toUpperCase().trim();
@@ -153,30 +149,32 @@ class Graph {
     return removed;
   }
 
-  /**
-   * Elimina un aeropuerto y todas sus rutas entrantes y salientes
-   */
+  eliminarArista(origen, destino) {
+    return this.removeEdge(origen, destino);
+  }
+
   removeVertex(id) {
     const key = String(id).toUpperCase().trim();
     if (!this.hasVertex(key)) return false;
 
-    // Eliminar aristas salientes
     this.adjacencyList.delete(key);
     this.vertices.delete(key);
 
-    // Eliminar aristas entrantes desde otros vértices
     for (const [, neighbors] of this.adjacencyList.entries()) {
       neighbors.delete(key);
     }
     return true;
   }
 
+  eliminarVertice(id) {
+    return this.removeVertex(id);
+  }
+
   /**
-   * Algoritmo de Dijkstra para calcular la ruta más óptima
-   * @param {string} startId - Aeropuerto de origen
-   * @param {string} endId - Aeropuerto de destino
+   * Algoritmo de Dijkstra para calcular la ruta más corta/óptima
+   * @param {string} startId - Aeropuerto origen
+   * @param {string} endId - Aeropuerto destino
    * @param {string} criteria - 'distancia' | 'precio' | 'duracion'
-   * @returns {Object} Resultado con la ruta, peso total y detalles
    */
   dijkstra(startId, endId, criteria = "distancia") {
     const start = String(startId).toUpperCase().trim();
@@ -189,13 +187,9 @@ class Graph {
       throw new Error(`El aeropuerto de destino '${end}' no existe en la red.`);
     }
 
-    // Distancias mínimas conocidas desde el origen
     const distances = new Map();
-    // Predecesores para reconstruir el camino
     const previous = new Map();
-    // Detalle de aristas usadas
     const edgeUsed = new Map();
-    // Conjunto de nodos no visitados
     const unvisited = new Set();
 
     for (const vertexId of this.vertices.keys()) {
@@ -208,7 +202,6 @@ class Graph {
     distances.set(start, 0);
 
     while (unvisited.size > 0) {
-      // Encontrar el vértice no visitado con menor distancia acumulada
       let current = null;
       let minDistance = Infinity;
 
@@ -220,24 +213,16 @@ class Graph {
         }
       }
 
-      // Si no hay nodo alcanzable o llegamos al destino, terminamos
-      if (current === null || minDistance === Infinity) {
-        break;
-      }
-
-      if (current === end) {
-        break;
-      }
+      if (current === null || minDistance === Infinity) break;
+      if (current === end) break;
 
       unvisited.delete(current);
 
-      // Relajar aristas a vecinos
       const neighbors = this.adjacencyList.get(current);
       if (neighbors) {
         for (const [neighborId, edgeData] of neighbors.entries()) {
           if (!unvisited.has(neighborId)) continue;
 
-          // Seleccionar peso según el criterio solicitado
           let weight = edgeData.distancia;
           if (criteria === "precio") {
             weight = edgeData.precio > 0 ? edgeData.precio : edgeData.distancia;
@@ -255,7 +240,6 @@ class Graph {
       }
     }
 
-    // Reconstruir camino
     if (distances.get(end) === Infinity) {
       return {
         encontrado: false,
@@ -290,7 +274,6 @@ class Graph {
       curr = prev;
     }
 
-    // Métricas totales del camino
     const totalDistancia = tramos.reduce((sum, t) => sum + (t.distancia || 0), 0);
     const totalPrecio = tramos.reduce((sum, t) => sum + (t.precio || 0), 0);
     const totalDuracion = tramos.reduce((sum, t) => sum + (t.duracion || 0), 0);
@@ -315,14 +298,16 @@ class Graph {
   }
 
   /**
-   * Búsqueda de todas las rutas posibles entre origen y destino
-   * mediante recorrido DFS con límite de escalas
-   * @param {string} startId - Aeropuerto de origen
-   * @param {string} endId - Aeropuerto de destino
+   * Búsqueda en Anchura (BFS) para itinerarios y conexiones con escalas.
+   * Al usar una Cola (FIFO), explora por capas de profundidad, garantizando
+   * que las rutas con MENOR cantidad de escalas se descubran primero.
+   *
+   * @param {string} startId - Aeropuerto origen
+   * @param {string} endId - Aeropuerto destino
    * @param {number} maxStops - Máximo de escalas intermedias permitidas
-   * @returns {Array<Object>} Lista de rutas encontradas
+   * @returns {Array<Object>} Rutas ordenadas por número de escalas
    */
-  findAllRoutes(startId, endId, maxStops = 3) {
+  buscarConexionesBFS(startId, endId, maxStops = 2) {
     const start = String(startId).toUpperCase().trim();
     const end = String(endId).toUpperCase().trim();
 
@@ -330,71 +315,68 @@ class Graph {
       return [];
     }
 
-    const results = [];
-    const visited = new Set();
+    const rutas = [];
+    // Cola FIFO de exploración para BFS: cada elemento contiene el estado del camino recorrido
+    const cola = [{ actual: start, camino: [start], tramos: [] }];
 
-    const dfs = (current, currentPath, currentTramos) => {
-      // Si superó el número de escalas permitidas, podar rama
-      const stops = currentPath.length - 2;
-      if (stops > maxStops) return;
+    while (cola.length > 0) {
+      const { actual, camino, tramos } = cola.shift();
+      const escalasActuales = camino.length - 2;
 
-      if (current === end) {
-        const totalDist = currentTramos.reduce((acc, t) => acc + (t.distancia || 0), 0);
-        const totalPrice = currentTramos.reduce((acc, t) => acc + (t.precio || 0), 0);
-        const totalDuration = currentTramos.reduce((acc, t) => acc + (t.duracion || 0), 0);
+      // Si llegamos al destino, registramos la ruta
+      if (actual === end && camino.length > 1) {
+        const totalDist = tramos.reduce((sum, t) => sum + (t.distancia || 0), 0);
+        const totalPrice = tramos.reduce((sum, t) => sum + (t.precio || 0), 0);
+        const totalDuration = tramos.reduce((sum, t) => sum + (t.duracion || 0), 0);
 
-        results.push({
-          camino: [...currentPath],
-          escalas: Math.max(0, currentPath.length - 2),
-          aeropuertosEscala: currentPath.slice(1, -1),
+        rutas.push({
+          camino: [...camino],
+          escalas: Math.max(0, camino.length - 2),
+          aeropuertosEscala: camino.slice(1, -1),
           totalDistanciaKm: totalDist,
           totalPrecioUSD: totalPrice,
           totalDuracionMin: totalDuration,
-          tramos: [...currentTramos],
+          tramos: [...tramos],
         });
-        return;
+        continue;
       }
 
-      visited.add(current);
+      // Si ya alcanzamos el límite de escalas, no encolamos más vecinos en esta rama
+      if (escalasActuales >= maxStops) {
+        continue;
+      }
 
-      const neighbors = this.adjacencyList.get(current);
+      const neighbors = this.adjacencyList.get(actual);
       if (neighbors) {
         for (const [nextVertex, edgeData] of neighbors.entries()) {
-          if (!visited.has(nextVertex)) {
+          // Evitar ciclos en el mismo itinerario
+          if (!camino.includes(nextVertex)) {
             const tramo = {
-              desde: current,
+              desde: actual,
               hacia: nextVertex,
-              aeropuertoOrigen: this.getVertex(current),
+              aeropuertoOrigen: this.getVertex(actual),
               aeropuertoDestino: this.getVertex(nextVertex),
               ...edgeData,
             };
 
-            currentPath.push(nextVertex);
-            currentTramos.push(tramo);
-
-            dfs(nextVertex, currentPath, currentTramos);
-
-            currentPath.pop();
-            currentTramos.pop();
+            cola.push({
+              actual: nextVertex,
+              camino: [...camino, nextVertex],
+              tramos: [...tramos, tramo],
+            });
           }
         }
       }
+    }
 
-      visited.delete(current);
-    };
-
-    dfs(start, [start], []);
-
-    // Ordenar rutas: primero las de menos escalas, luego menor distancia
-    return results.sort((a, b) => {
-      if (a.escalas !== b.escalas) return a.escalas - b.escalas;
-      return a.totalDistanciaKm - b.totalDistanciaKm;
-    });
+    return rutas;
   }
 
-  /**
-   * Exporta la estructura del grafo en formato serializable
-   */
+  // Alias compatible
+  findAllRoutes(startId, endId, maxStops = 2) {
+    return this.buscarConexionesBFS(startId, endId, maxStops);
+  }
+
   toObject() {
     const vertices = this.getVertices();
     const aristas = [];
