@@ -56,3 +56,17 @@ export function deshacer() {
 
   return operacion;
 }
+
+// Reconstruye la fila al arrancar con los pasajeros guardados en la base de datos
+export function restaurarFila(enFila, ultimoId) {
+  cola = new Queue();
+  enFila.forEach((p) =>
+    cola.enqueue({
+      id: p.idFila,
+      nombre: p.nombre,
+      vuelo: p.vuelo,
+      llegada: new Date(p.llegada).toISOString(),
+    })
+  );
+  siguienteId = ultimoId + 1;
+}
