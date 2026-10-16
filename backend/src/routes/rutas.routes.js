@@ -12,6 +12,7 @@ import {
   obtenerEstadisticasRed,
   reiniciarRed,
 } from "../services/rutas.service.js";
+import { dbConectada, query } from "../db.js";
 
 const router = Router();
 
@@ -74,14 +75,26 @@ router.get("/aeropuertos/:codigo", (req, res) => {
 /**
  * POST /api/rutas/aeropuertos
  * Registra un nuevo aeropuerto (vértice)
+ * Si hay base de datos conectada, persiste con consulta parametrizada
  */
-router.post("/aeropuertos", (req, res) => {
+router.post("/aeropuertos", async (req, res) => {
   try {
     const { codigo, nombre, ciudad, pais } = req.body ?? {};
     if (!codigo || !nombre) {
       return res.status(400).json({ error: "codigo y nombre son obligatorios." });
     }
     const nuevo = agregarAeropuerto({ codigo, nombre, ciudad, pais });
+
+    if (dbConectada()) {
+      await query(
+        `INSERT INTO aeropuertos (codigo, nombre, ciudad, pais)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (codigo) DO UPDATE
+         SET nombre = EXCLUDED.nombre, ciudad = EXCLUDED.ciudad, pais = EXCLUDED.pais`,
+        [nuevo.id, nuevo.nombre, nuevo.ciudad || null, nuevo.pais || null]
+      );
+    }
+
     res.status(201).json({ mensaje: "Aeropuerto registrado con éxito", aeropuerto: nuevo });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -91,13 +104,15 @@ router.post("/aeropuertos", (req, res) => {
 /**
  * POST /api/rutas
  * Registra una nueva conexión aérea (arista)
+ * Si hay base de datos conectada, persiste con consulta parametrizada ($1, $2, ...)
  */
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { origen, destino, distancia, precio, duracion, aerolinea, vuelo, bidireccional } = req.body ?? {};
     if (!origen || !destino || distancia === undefined) {
       return res.status(400).json({ error: "origen, destino y distancia son obligatorios." });
     }
+
     const nuevaRuta = agregarRuta({
       origen,
       destino,
@@ -108,6 +123,39 @@ router.post("/", (req, res) => {
       vuelo,
       bidireccional,
     });
+
+    if (dbConectada()) {
+      await query(
+        `INSERT INTO rutas (origen, destino, distancia, precio, duracion, aerolinea, vuelo)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          nuevaRuta.origen,
+          nuevaRuta.destino,
+          nuevaRuta.distancia,
+          nuevaRuta.precio,
+          nuevaRuta.duracion,
+          nuevaRuta.aerolinea,
+          nuevaRuta.vuelo,
+        ]
+      );
+
+      if (nuevaRuta.bidireccional) {
+        await query(
+          `INSERT INTO rutas (origen, destino, distancia, precio, duracion, aerolinea, vuelo)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            nuevaRuta.destino,
+            nuevaRuta.origen,
+            nuevaRuta.distancia,
+            nuevaRuta.precio,
+            nuevaRuta.duracion,
+            nuevaRuta.aerolinea,
+            `${nuevaRuta.destino}-${nuevaRuta.origen}`,
+          ]
+        );
+      }
+    }
+
     res.status(201).json({ mensaje: "Ruta agregada exitosamente", ruta: nuevaRuta });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -118,13 +166,21 @@ router.post("/", (req, res) => {
  * DELETE /api/rutas/:origen/:destino
  * Elimina una conexión entre aeropuertos
  */
-router.delete("/:origen/:destino", (req, res) => {
+router.delete("/:origen/:destino", async (req, res) => {
   try {
     const { origen, destino } = req.params;
     const resultado = eliminarRuta(origen, destino);
     if (!resultado.eliminado) {
       return res.status(404).json({ error: `La ruta entre ${origen} y ${destino} no existía.` });
     }
+
+    if (dbConectada()) {
+      await query("DELETE FROM rutas WHERE origen = $1 AND destino = $2", [
+        resultado.origen,
+        resultado.destino,
+      ]);
+    }
+
     res.json({ mensaje: "Ruta eliminada con éxito", ...resultado });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -162,7 +218,7 @@ router.get("/corta", (req, res) => {
 
 /**
  * GET /api/rutas/escalas
- * Encuentra todas las alternativas de vuelos (directos y con escalas)
+ * Encuentra todas las alternativas de vuelos (directos y con escalas) mediante BFS
  * Parámetros query:
  *   - origen: ej. BOG (obligatorio)
  *   - destino: ej. MAD (obligatorio)

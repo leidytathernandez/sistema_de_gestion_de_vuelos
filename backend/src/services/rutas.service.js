@@ -1,9 +1,9 @@
 import Graph from "../structures/Graph.js";
 
-// Instancia única del grafo de rutas en memoria (no toca BD por ahora)
+// Instancia única del grafo de rutas en memoria (desacoplada para pruebas)
 let redRutas = new Graph(true);
 
-// Datos iniciales de aeropuertos de prueba
+// Datos iniciales de aeropuertos de prueba (Hubs nacionales e internacionales)
 const AEROPUERTOS_INICIALES = [
   { codigo: "BOG", nombre: "Aeropuerto Internacional El Dorado", ciudad: "Bogotá", pais: "Colombia" },
   { codigo: "MDE", nombre: "Aeropuerto Internacional José María Córdova", ciudad: "Medellín", pais: "Colombia" },
@@ -88,6 +88,32 @@ export function inicializarRed() {
 
 // Inicializar red al cargar el servicio
 inicializarRed();
+
+/**
+ * Reconstruye el grafo en memoria a partir de los registros de PostgreSQL
+ */
+export function restaurarRedDesdeDB(aeropuertosDB = [], rutasDB = []) {
+  redRutas = new Graph(true);
+
+  for (const a of aeropuertosDB) {
+    redRutas.addVertex(a.codigo, {
+      nombre: a.nombre,
+      ciudad: a.ciudad,
+      pais: a.pais,
+    });
+  }
+
+  for (const r of rutasDB) {
+    redRutas.addEdge(r.origen, r.destino, Number(r.distancia), {
+      precio: Number(r.precio) || 0,
+      duracion: Number(r.duracion) || 0,
+      aerolinea: r.aerolinea || "Genérica",
+      vuelo: r.vuelo || `${r.origen}-${r.destino}`,
+    });
+  }
+
+  return redRutas;
+}
 
 /**
  * Retorna la red completa en formato serializable
@@ -201,23 +227,17 @@ export function eliminarRuta(origen, destino) {
 
 /**
  * Calcula la ruta más corta/óptima usando Dijkstra
- * @param {string} origen - Código del aeropuerto origen
- * @param {string} destino - Código del aeropuerto destino
- * @param {string} criterio - 'distancia' | 'precio' | 'duracion'
  */
 export function calcularRutaMasCorta(origen, destino, criterio = "distancia") {
   return redRutas.dijkstra(origen, destino, criterio);
 }
 
 /**
- * Busca todas las opciones de rutas con escalas disponibles
- * @param {string} origen
- * @param {string} destino
- * @param {number} maxEscalas
+ * Busca todas las opciones de rutas con escalas mediante Búsqueda en Anchura (BFS)
  */
 export function buscarRutasConEscalas(origen, destino, maxEscalas = 2) {
   const limite = Math.max(0, parseInt(maxEscalas, 10) || 2);
-  const rutas = redRutas.findAllRoutes(origen, destino, limite);
+  const rutas = redRutas.buscarConexionesBFS(origen, destino, limite);
 
   return {
     origen: String(origen).toUpperCase().trim(),
@@ -236,7 +256,6 @@ export function obtenerEstadisticasRed() {
   const aeropuertos = red.vertices;
   const rutas = red.aristas;
 
-  // Grado de salida (rutas que parten de cada aeropuerto)
   const conectividad = {};
   for (const aero of aeropuertos) {
     conectividad[aero.id] = {
