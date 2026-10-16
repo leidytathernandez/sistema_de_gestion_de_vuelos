@@ -1,13 +1,13 @@
 // Une las estructuras en memoria (AVL + Heap) con Postgres (Neon).
 // Postgres es la persistencia; las búsquedas y la prioridad las resuelven los árboles.
 import { pool } from './db.js';
-import { AVLTree } from './structures/AVLTree.js';
-import { MinHeap } from './structures/MinHeap.js';
+import { AVLTree } from './estructuras/AVLTree.js';
+import { MinHeap } from './estructuras/MinHeap.js';
 
 const porCodigo = new AVLTree(); // clave: código de vuelo
 const porSalida = new AVLTree(); // clave: fecha de salida ISO + código (permite búsqueda por rango)
 const colaTorre = new MinHeap(
-  (a, b) => a.prioridad - b.prioridad || a.creada_en - b.creada_en // menor prioridad primero; empate: el más antiguo
+  (a, b) => a.prioridad - b.prioridad || a.creada_en - b.creada_en || a.id - b.id // menor prioridad primero; empate: el más antiguo
 );
 
 const claveSalida = (v) => `${new Date(v.salida).toISOString()}|${v.codigo}`;
@@ -65,7 +65,7 @@ export async function eliminarVuelo(codigo) {
 
 // ---------- Torre de control (Heap) ----------
 export const verCola = () => [...colaTorre.datos].sort(
-  (a, b) => a.prioridad - b.prioridad || a.creada_en - b.creada_en
+  (a, b) => a.prioridad - b.prioridad || a.creada_en - b.creada_en || a.id - b.id
 );
 export const arbolCola = () => colaTorre.aArbol();
 
