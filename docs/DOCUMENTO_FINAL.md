@@ -2,7 +2,7 @@
 
 **Proyecto Académico / Profesional**: Estructuras de Datos Avanzadas  
 **Módulo Desarrollado**: Red de Rutas Aéreas, Algoritmo de Dijkstra y Escalas  
-**Integrante Responsable**: Integrante 3 (`feature/rutas`)  
+**Integrante Responsable**: Juan Manuel Álvarez Molano (`feature/rutas`)  
 **Fecha**: Octubre 2026  
 
 ---

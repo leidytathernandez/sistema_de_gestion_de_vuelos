@@ -10,9 +10,9 @@ Según la arquitectura del proyecto y la asignación por ramas de trabajo:
 
 | Integrante | Rama Git | Estructuras de Datos | Módulo Asignado | Tablas BD (Fase BD) | Tarea Compartida |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Integrante 1** | `feature/pasajeros` | **Cola + Pila** | Pasajeros, reservas, check-in, historial con deshacer | `pasajeros`, `reservas` | Publicar el backend |
-| **Integrante 2** | `feature/vuelos` | **Heap + Trie** | Vuelos, tablero, torre de control, buscador | `vuelos`, `aeropuertos` | Publicar el frontend |
-| **Integrante 3** | `feature/rutas` | **Grafo** | Red de rutas, ruta más corta (Dijkstra), escalas | `rutas` *(origen, destino, distancia)* | **Documento final + README.md** |
+| **Leidy Hernández** | `feature/pasajeros` | **Cola + Pila** | Pasajeros, reservas, check-in, historial con deshacer | `pasajeros`, `reservas` | Publicar el backend |
+| **Carlos** | `feature/vuelos` | **Heap + Trie** | Vuelos, tablero, torre de control, buscador | `vuelos`, `aeropuertos` | Publicar el frontend |
+| **Juan Manuel Álvarez Molano** | `feature/rutas` | **Grafo** | Red de rutas, ruta más corta (Dijkstra), escalas (BFS) | `rutas` *(origen, destino, distancia)* | **Documento final + README.md** |
 
 > **Nota de desarrollo para `feature/rutas`**: Siguiendo los requerimientos actuales, el módulo opera completamente **en memoria** mediante la estructura de datos `Graph`, manteniendo total desacoplamiento de la base de datos hasta la fase de integración general.
 
