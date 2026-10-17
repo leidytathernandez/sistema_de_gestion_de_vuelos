@@ -3,6 +3,9 @@ import cors from "cors";
 import "dotenv/config";
 import pasajerosRoutes from "./routes/pasajeros.routes.js";
 
+import arbolesRoutes from "./arboles/index.js";
+import { cargarEstructuras } from "./arboles/vuelosService.js";
+
 const app = express();
 
 app.use(cors());
@@ -15,6 +18,9 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/pasajeros", pasajerosRoutes);
 
+app.use("/api", arbolesRoutes);
+
+await cargarEstructuras();
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
