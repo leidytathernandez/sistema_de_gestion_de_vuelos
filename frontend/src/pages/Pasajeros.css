@@ -1,0 +1,16 @@
+.pas-pagina { max-width: 760px; margin: 0 auto; padding: 24px 16px; color: #1f2937; }
+.pas-pagina h1 { margin: 0 0 16px; }
+.pas-pagina h2 { margin: 28px 0 4px; }
+.pas-nota { margin: 0 0 12px; color: #6b7280; font-size: 14px; }
+.pas-formulario, .pas-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.pas-pagina input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; flex: 1; min-width: 160px; }
+.pas-pagina button { padding: 10px 16px; border: none; border-radius: 8px; background: #2563eb; color: white; cursor: pointer; }
+.pas-pagina button.pas-secundario { background: #475569; }
+.pas-error { color: #b91c1c; }
+.pas-fila { display: flex; gap: 10px; flex-wrap: wrap; }
+.pas-tarjeta { background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px 16px; display: flex; flex-direction: column; gap: 2px; color: #1f2937; }
+.pas-tarjeta.pas-siguiente { border-color: #2563eb; box-shadow: 0 0 0 2px #bfdbfe; }
+.pas-tarjeta em { color: #2563eb; font-size: 12px; font-style: normal; }
+.pas-historial { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.pas-historial li { background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; color: #1f2937; }
+.pas-vacio { color: #9ca3af; }
