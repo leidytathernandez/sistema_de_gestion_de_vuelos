@@ -3,7 +3,7 @@ import { conectarDB, dbConectada, query } from "./db.js";
 
 // Pasajeros de ejemplo: "minutos" indica hace cuánto llegaron
 const pasajeros = [
-  { id: 4, nombre: "Carlos Correa", vuelo: "AV101", minutos: 45, estado: "atendido"},
+  {id: 4, nombre: "Carlos Correa", vuelo: "AV101", minutos: 45, estado: "atendido"},
   {id: 5, nombre: "Juan Molano", vuelo: "AV101", minutos: 45, estado: "en_fila"},
   {id: 6, nombre: "Alexandra Montenegro", vuelo: "LA330", minutos: 90, estado: "en_fila"},
   {id: 7, nombre: "Michael Hernandez", vuelo: "LA330", minutos: 60, estado: "atendido"},
