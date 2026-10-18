@@ -17,6 +17,12 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/pasajeros", pasajerosRoutes);
 
+// Si una operación falla (por ejemplo, la base de datos), responde con un error claro
+app.use((error, req, res, next) => {
+  console.error("Error en la API:", error);
+  res.status(500).json({ error: "No se pudo completar la operación en el servidor" });
+});
+
 async function iniciar() {
   await conectarDB();
 
